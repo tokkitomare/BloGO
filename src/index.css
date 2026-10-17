@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Huninn&family=Open+Sans&display=swap');
+@import "tailwindcss";
+
+@theme {
+    /* FONTS */
+    --font-helvetica: "Heveltica", "Arial", "sans-serif";
+    --font-huninn: "Huninn", "Heveltica", "Arial", "sans-serif";
+    --font-opensans: "Open Sans", "Heveltica", "Arial", "sans-serif";
+
+    /* COLORS DARK */
+    --color-primary: #fff;
+
+    /* COLORS LIGHT */
+
+    /* GRADIENT DARK */
+    --background-image-gradient-dark: linear-gradient(
+        to bottom right,
+        #222,
+        #333,
+        #444
+    );
+    
+    /* GRADIENT LIGHT */
+    --background-image-gradient-light: linear-gradient(
+        to bottom right,
+        #ffe1be,
+        #fff1e2,
+        #fff
+    );
+
+    /* SHADOW */
+    --shadow-glow-1: 0 0 3px rgba(255, 255, 255, 0.20);
+    --shadow-glow-2: 0 0 6px rgba(255, 255, 255, 0.20);
+    --shadow-glow-3: 0 0 12px rgba(255, 255, 255, 0.20);
+    --shadow-glow-4: 0 0 18px rgba(255, 255, 255, 0.20);
+    --shadow-glow-5: 0 0 26px rgba(255, 255, 255, 0.20);
+}
+
+* {
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: #71717a #27272a;
+}
+
+body {
+    @apply font-opensans bg-gradient-dark bg-fixed bg-cover bg-center bg-no-repeat text-[#f0f2f5];
+}
+
+.main-class {
+    @apply w-full lg:w-full h-full px-3 sm:px-5 py-2
+}
+
+.bg-glass {
+    @apply bg-white/35 backdrop-blur-md border-white/30 border
+}
