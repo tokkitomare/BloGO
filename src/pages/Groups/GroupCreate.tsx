@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { Group } from "../../types";
-
-function loadFromStorage<T>(key: string): T[] {
-    try {
-        const parsed = JSON.parse(localStorage.getItem(key) ?? "[]");
-        return Array.isArray(parsed) ? parsed : [];
-    } catch {
-        return [];
-    }
-}
+import { useAuth } from "../../contexts/AuthContext";
+import { getUserByFirebaseUid } from "../../hooks/getUserByFirebaseUid";
+import { api } from "../../lib/api";
 
 const glassButton = `border border-white/45 bg-black/45 text-white shadow-glow-5 cursor-pointer
     transition duration-150 motion-reduce:transition-none
@@ -18,75 +12,69 @@ const glassButton = `border border-white/45 bg-black/45 text-white shadow-glow-5
     disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0 disabled:hover:bg-black/45`;
 
 export default function GroupCreate() {
+    const { user } = useAuth();
+
     const navigate = useNavigate();
 
     const [groupName, setGroupName] = useState("");
     const [groupDesc, setGroupDesc] = useState("");
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-    const canCreate = groupName.trim().length > 0 && groupDesc.trim().length > 0;
+    const canCreate = groupName.trim().length > 0 && groupDesc.trim().length > 0 && selectedImage;
 
-    function handleSave(): string {
+    const [modal, setModal] = useState(false);
+
+    async function handleSave() {
+        if (!canCreate || !user) return;
+
+        const dbUser = await getUserByFirebaseUid(user.uid);
+
+        if (!dbUser) {
+            alert("Não encontramos o seu usuário. Faça login novamente.");
+            return;
+        }
 
         const newGroup: Group = {
             id: crypto.randomUUID(),
-            owner: "Usuário Teste",
+            ownerId: dbUser.id,
             name: groupName,
             description: groupDesc,
-            members: ["Usuário Teste"],
-            mural: null,
-            rules: null,
-            statistics: null,
-            photo: "",
-            // members: ["Vitor", "Gabriel", "Miguel", "Arthur", "Heitor",
-            //         "Bernardo", "Davi", "Lucas", "Matheus", "Rafael",
-            //         "Leonardo", "Henrique", "Gustavo", "Felipe", "Nicolas",
-            //         "Samuel", "Enzo", "Benjamin", "Pedro", "Daniel",
-            //         "Eduardo", "Murilo", "Lorenzo", "Theo", "Caio",
-            //         "Bruno", "Andre", "Vinicius", "Joaquim", "Otavio",
-            //         "Alice", "Sophia", "Helena", "Laura", "Valentina",
-            //         "Manuela", "Isabella", "Heloisa", "Julia", "Cecilia",
-            //         "Maite", "Livia", "Beatriz", "Maria", "Lorena",
-            //         "Giovanna", "Luisa", "Clara", "Mariana", "Isadora",
-            //         "Amanda", "Camila", "Larissa", "Leticia", "Yasmin",
-            //         "Ana", "Gabriela", "Rebeca", "Eloisa", "Esther",
-            //         "Alex", "Ariel", "Noah", "Luca", "Ryan",
-            //         "Ian", "Erick", "Diego", "Thiago", "Igor",
-            //         "Leon", "Cauã", "Breno", "Danilo", "Rodrigo",
-            //         "Fernando", "Marcelo", "Ricardo", "Anderson", "Roberto",
-            //         "Patricia", "Vanessa", "Priscila", "Bianca", "Carolina",
-            //         "Débora", "Eduarda", "Fernanda", "Isabel", "Mirela",
-            //         "Nicole", "Raquel", "Sabrina", "Taina", "Vitória",
-            //         "Melissa", "Olivia", "Antonella", "Agatha", "Stella"
-            // ],
-            // mural: ["Aviso 1", "Aviso 2", "Aviso 3"],
-            // rules: "Respeite todos\ncompartilhe conhecimento\najude\nteste",
-            // statistics: ["Metrica 1", "Metrica 2", "Metrica 3", "Metrica 4", "Metrica 5", "Metrica 6"]
+            members: [dbUser.id],
+            mural: [],
+            rules: [],
+            statistics: [],
+            photo: selectedImage,
+            posts: [],
         };
-
-        const storedGroups = loadFromStorage<Group>("groups");
-        storedGroups.push(newGroup);
-
-        localStorage.setItem("groups", JSON.stringify(storedGroups));
+        await api.post("/groups", newGroup);
 
         return newGroup.id;
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
         const id = handleSave();
-        if (id) navigate(`/group/about/${id}`);
+        if (id) navigate(`/group/about/${await id}`);
     }
 
     useEffect(() => {
         if (!canCreate) return;
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key !== "Enter" || e.shiftKey || e.isComposing || e.target instanceof HTMLTextAreaElement) return;
-        
+
             e.preventDefault();
             handleSubmit();
         };
         window.addEventListener("keydown", onKeyDown);
         return () => window.removeEventListener("keydown", onKeyDown);
     }, [canCreate, handleSubmit]);
+
+    const images = Object.values(
+        import.meta.glob("../../assets/images/*.jp*", {
+            eager: true,
+            query: "?url",
+            import: "default",
+        })
+    ) as string[];
 
     return (
         <main className="flex justify-center items-center h-full w-full p-3 sm:p-5">
@@ -141,30 +129,60 @@ export default function GroupCreate() {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-3 lg:flex-1">
+                    <div className="relative flex flex-col gap-3 lg:flex-1">
                         <p className="text-sm font-medium">Imagem do grupo</p>
+
+                        {modal && (
+                            <>
+                                <div
+                                    onClick={() => setModal(false)}
+                                    aria-hidden="true"
+                                    className="fixed inset-0 z-40"
+                                />
+
+                                <div className="absolute top-full left-0 z-50 mt-2 bg-glass rounded-2xl p-5 w-fit">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {images.map((img) => (
+                                            <button
+                                                key={img}
+                                                onClick={() => { setSelectedImage(img); setModal(false); } }
+                                            >
+                                                <img
+                                                key={img}
+                                                src={img}
+                                                alt="Imagem do grupo"
+                                                className="w-20 h-20 rounded-xl object-cover"
+                                            />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         <button
                             type="button"
-                            disabled
-                            title="Em breve"
-                            aria-label="Adicionar imagens (em breve)"
+                            onClick={() => setModal(!modal)}
+                            aria-label="Adicionar imagens"
                             className="flex flex-col items-center justify-center gap-1 w-full aspect-3/2
-                            rounded-2xl shadow-lg text-neutral-700 disabled:cursor-not-allowed 
-                            disabled:opacity-70 bg-black/5 border-2 border-black
-                            px-5 py-4 font-huninn leading-tight resize-none
-                            placeholder:text-black/40 selection:bg-black"
+        rounded-2xl shadow-lg text-neutral-700 bg-black/5 border-2 border-black
+        px-5 py-4 font-huninn leading-tight"
                         >
-                            <span className="text-4xl font-light leading-none">+</span>
-                            <span className="text-xs">Em breve</span>
+                            {selectedImage ? (
+                                <img src={selectedImage} className="rounded-2xl shadow-md" />
+                            ) : (
+                                <span className="text-4xl font-light leading-none">
+                                    {modal ? "−" : "+"}
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
 
-                
+
                 <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <p className="text-sm opacity-70">
-                        {canCreate ? "Tudo pronto para criar." : "Para criar, informe um nome e adicione uma descrição."}
+                        {canCreate ? "Tudo pronto para criar." : "Para criar, informe um nome, adicione uma descrição e selecione a foto do seu grupo."}
                     </p>
                     <button
                         type="button"
