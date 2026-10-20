@@ -1,11 +1,11 @@
 import { Route, Routes, BrowserRouter } from "react-router-dom";
 import * as Pages from "./pages";
 import { AuthProvider } from "./contexts/AuthContext";
-const { Tests,
+const {
   Home, Login, UserProfile, 
   NotFound, Layout, Post, 
-  PostView, Groups, GroupManage, GroupCreate,
-  GroupAbout, GroupHome,
+  PostView, Groups, GroupsManage, GroupCreate, ManageGroup,
+  GroupAbout, GroupHome, Config,
 } = Pages;
 
 export default function App() {
@@ -18,6 +18,8 @@ export default function App() {
               <Route index element={ <Home/> } />
               <Route path="post/:id" element={<PostView />} />
               <Route path="groups/search" element={<Groups />} />
+              <Route path="group/about/:id" element={<GroupAbout />} />
+              <Route path="group/:id" element={<GroupHome />} />
 
               <Route element={<Pages.GuestsOnly />}>
                 <Route path="login" element={<Login />} />
@@ -27,13 +29,10 @@ export default function App() {
                 <Route path="profile/:id" element={<UserProfile />} />
                 <Route path="post" element={<Post />} />
                 <Route path="groups/create" element={<GroupCreate />} />
-                <Route path="groups/manage" element={<GroupManage />} />
-                <Route path="group/about/:id" element={<GroupAbout />} />
-                <Route path="group/:id" element={<GroupHome />} />
+                <Route path="groups/manage" element={<GroupsManage />} />
+                <Route path="group/manage/:id" element={<ManageGroup />} />
+                <Route path="configuration" element={ <Config /> } />
               </Route>
-
-              {/* TIRAR ISTO ANTES DE SUBIR PRA PRODUÇÃO */}
-              <Route path="/testssecret" element={ <Tests/> }/>
 
               <Route path="*" element={ <NotFound/> }/>
             </Route>
