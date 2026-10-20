@@ -7,9 +7,13 @@ import TopicsSection from "./components/TopicsSection";
 import { usePublishPost } from "./hooks/usePublishPost";
 import { useTopicModals } from "./hooks/useTopicModals";
 import { useTopicsDraft } from "./hooks/useTopicsDraft";
+import { useLocation } from "react-router-dom";
 
 export default function CreatePost() {
     const [postTitle, setPostTitle] = useState("");
+
+    const location = useLocation();
+    const groupId: string | null = location.state?.groupId ?? null;
 
     const { topicCount, refresh, clear } = useTopicsDraft();
     const modals = useTopicModals(refresh);
@@ -18,6 +22,7 @@ export default function CreatePost() {
         topicCount,
         onTopicsRefresh: refresh,
         onTopicsClear: clear,
+        groupId,
     });
 
     return (
@@ -39,6 +44,7 @@ export default function CreatePost() {
                     isPosting={publishing.isPosting}
                     error={publishing.error}
                     onPublish={publishing.publish}
+                    groupId={!!groupId}
                 />
             </div>
 
