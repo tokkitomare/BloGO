@@ -12,6 +12,7 @@ interface UsePublishPostParams {
     topicCount: number;
     onTopicsRefresh: () => void;
     onTopicsClear: () => void;
+    groupId: string | null;
 }
 
 async function getUserByFirebaseUid(
@@ -29,6 +30,7 @@ export function usePublishPost({
     topicCount,
     onTopicsRefresh,
     onTopicsClear,
+    groupId,
 }: UsePublishPostParams) {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -53,7 +55,6 @@ export function usePublishPost({
                 return;
             }
 
-            // user.uid é o id do Firebase; o owner do post é o id do usuário no db.json.
             const dbUser = await getUserByFirebaseUid(user.uid);
 
             if (!dbUser) {
@@ -62,9 +63,10 @@ export function usePublishPost({
             }
 
             const post = buildPost({
-                ownerId: String(dbUser.id),
+                ownerId: dbUser.id,
                 title,
                 topics,
+                groupId
             });
 
             await createPost(post);
