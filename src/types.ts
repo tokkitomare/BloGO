@@ -2,16 +2,12 @@ export interface Topic {
     id: string;
     title: string;
     description: string;
-    images: {
-        "0": string | null;
-        "1": string | null;
-    };
     postId: string | null,
 }
 
 export interface Post {
     id: string,
-    owner: string,
+    ownerId: string,
     title: string,
     date: Date,
     topics: Topic[],
@@ -27,10 +23,11 @@ export interface Group {
     name: string,
     description: string,
     photo: string,
-    members: string[] | null,
-    mural: string[] | null,
-    rules: string | null,
-    statistics: string[] | null,
+    members: string[],
+    mural: string[],
+    rules: string[],
+    statistics: string[],
+    posts: string[],
 }
 
 export interface User {
