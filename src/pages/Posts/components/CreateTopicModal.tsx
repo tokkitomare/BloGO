@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Topic } from "../../../types";
-import ImageUploader, {
-    type ImageSlots,
-} from "../../../components/ImageUploader";
 
 interface ModalProps {
     isOpen: boolean;
@@ -12,12 +9,6 @@ interface ModalProps {
 
 const TITLE_MAX = 50;
 const DESC_MAX = 1500;
-const STORAGE_KEY = "TopicImages";
-
-const EMPTY_IMAGES: ImageSlots = {
-    "0": null,
-    "1": null,
-};
 
 function loadTopics(): Topic[] {
     try {
@@ -28,29 +19,6 @@ function loadTopics(): Topic[] {
         return Array.isArray(parsed) ? parsed : [];
     } catch {
         return [];
-    }
-}
-
-function loadImages(): ImageSlots {
-    try {
-        const parsed = JSON.parse(
-            localStorage.getItem(STORAGE_KEY) ?? "{}"
-        );
-
-        // Compatibilidade com o formato antigo string[]
-        if (Array.isArray(parsed)) {
-            return {
-                "0": parsed[0] ?? null,
-                "1": parsed[1] ?? null,
-            };
-        }
-
-        return {
-            "0": parsed["0"] ?? null,
-            "1": parsed["1"] ?? null,
-        };
-    } catch {
-        return { ...EMPTY_IMAGES };
     }
 }
 
@@ -68,8 +36,6 @@ export default function CreateTopicModal({
         title.trim().length > 0 &&
         desc.trim().length > 0;
 
-    const [images, setImages] = useState<ImageSlots>(loadImages);
-
     // Carrega os dados ao abrir o modal.
     useEffect(() => {
         if (!isOpen) return;
@@ -77,48 +43,15 @@ export default function CreateTopicModal({
         setTitle(topic?.title ?? "");
         setDesc(topic?.description ?? "");
 
-        // Ao criar, começa sempre sem imagens.
-        // Ao editar, carrega as imagens do tópico.
-        if (topic) {
-            const topicImages = topic.images as ImageSlots | undefined;
-
-            setImages({
-                "0": topicImages?.["0"] ?? null,
-                "1": topicImages?.["1"] ?? null,
-            });
-        } else {
-            setImages({ ...EMPTY_IMAGES });
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify(EMPTY_IMAGES)
-            );
-        }
-
         titleRef.current?.focus();
     }, [isOpen, topic]);
-
-    // Limpa as imagens temporárias.
-    const clearImages = useCallback(() => {
-        const emptyImages: ImageSlots = { ...EMPTY_IMAGES };
-
-        localStorage.setItem(
-            STORAGE_KEY,
-            JSON.stringify(emptyImages)
-        );
-
-        setImages(emptyImages);
-
-        // Atualiza o estado interno dos ImageUploader.
-        window.dispatchEvent(new Event("images-cleared"));
-    }, []);
 
     // Fecha e limpa os campos do formulário.
     const handleClose = useCallback(() => {
         setTitle("");
         setDesc("");
-        clearImages();
         onClose();
-    }, [clearImages, onClose]);
+    }, [onClose]);
 
     // Salva o tópico no localStorage.
     const saveTopic = useCallback((): boolean => {
@@ -135,7 +68,6 @@ export default function CreateTopicModal({
                           ...t,
                           title: cleanTitle,
                           description: cleanDesc,
-                          images,
                       }
                     : t
             );
@@ -149,7 +81,6 @@ export default function CreateTopicModal({
                 id: crypto.randomUUID(),
                 title: cleanTitle,
                 description: cleanDesc,
-                images,
                 postId: null,
             };
 
@@ -162,7 +93,7 @@ export default function CreateTopicModal({
         }
 
         return true;
-    }, [canSave, title, desc, topic, images]);
+    }, [canSave, title, desc, topic]);
 
     const handleSave = useCallback(() => {
         if (saveTopic()) {
@@ -296,9 +227,9 @@ export default function CreateTopicModal({
                     />
                 </div>
 
-                {/* Descrição + imagens */}
+                {/* Descrição */}
                 <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0 overflow-y-auto lg:overflow-visible">
-                    <div className="flex flex-col gap-2 lg:w-7/10 min-h-56 lg:min-h-0">
+                    <div className="flex flex-col gap-2 lg:w-full min-h-56 lg:min-h-0">
                         <div className="flex items-baseline justify-between">
                             <label htmlFor="topic-description" className="text-sm font-medium">
                                 Descrição
@@ -320,36 +251,6 @@ export default function CreateTopicModal({
                             focus:outline-none focus:bg-white/20 focus:border-white/60
                             transition-colors motion-reduce:transition-none"
                         />
-                    </div>
-
-                    <div className="flex flex-col gap-3 lg:flex-1">
-                        <p className="text-sm font-medium">Imagens</p>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <ImageUploader
-                                buttonClassName="relative overflow-hidden flex flex-col
-    items-center justify-center gap-1 w-full aspect-3/2 rounded-2xl
-    bg-white/10 border border-white/30 shadow-glow-3 text-white/60
-    disabled:cursor-not-allowed disabled:opacity-70"
-                                storageKey={STORAGE_KEY}
-                                maxUploadSize={1024 * 1024}
-                                removeClassName="bg-white/10 border border-white/30 shadow-glow-3 rounded-md cursor-pointer"
-                                imageIndex={0}
-                                onImageChange={setImages}
-                            />
-
-                            <ImageUploader
-                                buttonClassName="relative overflow-hidden flex flex-col
-    items-center justify-center gap-1 w-full aspect-3/2 rounded-2xl
-    bg-white/10 border border-white/30 shadow-glow-3 text-white/60
-    disabled:cursor-not-allowed disabled:opacity-70"
-                                storageKey={STORAGE_KEY}
-                                maxUploadSize={1024 * 1024}
-                                removeClassName="bg-white/10 border border-white/30 shadow-glow-3 rounded-md cursor-pointer"
-                                imageIndex={1}
-                                onImageChange={setImages}
-                            />
-                        </div>
                     </div>
                 </div>
 
