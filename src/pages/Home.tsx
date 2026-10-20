@@ -71,7 +71,7 @@ export default function Home() {
 
     // Autores: uma única requisição com todos os post.owner
     useEffect(() => {
-        const owners = [...new Set(posts.map((post) => post.owner))];
+        const owners = [...new Set(posts.map((post) => post.ownerId))];
         if (owners.length === 0) return;
 
         let cancelled = false;
@@ -224,22 +224,21 @@ export default function Home() {
                             flex items-center justify-center text-white 
                             focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
                                         >
-                                            {authors[post.owner]?.photoUrl && (
+                                            {authors[post.ownerId]?.photoUrl && (
                                                 <img
-                                                    key={authors[post.owner]?.photoUrl}
-                                                    src={authors[post.owner]?.photoUrl}
+                                                    key={authors[post.ownerId]?.photoUrl}
+                                                    src={authors[post.ownerId]?.photoUrl}
                                                     alt="Foto de perfil"
                                                     referrerPolicy="no-referrer"
-                                                    onLoad={() => console.log("Foto carregada:", authors[post.owner]?.photoUrl)}
                                                     onError={() => {
-                                                        console.error("Falha ao carregar foto:", authors[post.owner]?.photoUrl);
+                                                        console.error("Falha ao carregar foto:", authors[post.ownerId]?.photoUrl);
                                                     }}
                                                     className="absolute inset-0 w-full h-full object-cover"
                                                 />
                                             )}
                                         </span>
                                         <div className="min-w-0 leading-tight">
-                                            <p className="font-semibold truncate">{authors[post.owner]?.displayName ?? "Anônimo"}</p>
+                                            <p className="font-semibold truncate">{authors[post.ownerId]?.displayName ?? "Anônimo"}</p>
                                             <time
                                                 dateTime={new Date(post.date).toISOString()}
                                                 title={fullDate.format(new Date(post.date))}
