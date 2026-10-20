@@ -6,6 +6,7 @@ interface PublishBarProps {
     isPosting: boolean;
     error: string | null;
     onPublish: () => void;
+    groupId: boolean;
 }
 
 export default function PublishBar({
@@ -14,6 +15,7 @@ export default function PublishBar({
     isPosting,
     error,
     onPublish,
+    groupId,
 }: PublishBarProps) {
     return (
         <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
@@ -22,6 +24,10 @@ export default function PublishBar({
                     {isReady
                         ? "Tudo pronto para publicar."
                         : "Para postar, informe um título e adicione ao menos um tópico."}
+                </p>
+
+                <p className="text-sm opacity-70">
+                        {groupId && "Esta postagem pertencerá a um grupo."}
                 </p>
 
                 {error && (
